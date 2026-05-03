@@ -1,0 +1,52 @@
+name: "Terraform GitOps Pipeline"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**' # Uruchom tylko gdy zmienimy coś w folderze terraform
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+
+# To jest kluczowe dla OIDC! Zezwala GitHubowi na proszenie AWS o krótkożyjący token
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: "Plan / Apply"
+    runs-on: ubuntu-latest
+    
+    # Mówimy GitHubowi, że cały kod leży w podfolderze "terraform"
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+      - name: Pobranie kodu (Checkout)
+        uses: actions/checkout@v4
+
+      - name: Magiczny uścisk dłoni z AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::691627365317:role/GitHubActionsGitOpsRole
+          aws-region: eu-central-1
+
+      - name: Instalacja Terraforma
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan (Tylko dla Pull Requestów)
+        if: github.event_name == 'pull_request'
+        run: terraform plan -var-file="prod.tfvars"
+
+      - name: Terraform Apply (Tylko przy scaleniu z gałęzią main)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -var-file="prod.tfvars" -auto-approve

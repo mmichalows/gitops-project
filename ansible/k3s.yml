@@ -1,0 +1,53 @@
+---
+- name: Instalacja i Konfiguracja klastra K3s
+  hosts: lightsail
+  become: yes
+
+  tasks:
+    - name: UFW - Zezwól na ruch do API Kubernetesa (port 6443)
+      ufw:
+        rule: allow
+        port: '6443'
+        proto: tcp
+
+    - name: UFW - Zezwól na ruch HTTP (80) i HTTPS (443)
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '80'
+        - '443'
+
+    - name: K3s - Przygotowanie katalogu konfiguracji
+      file:
+        path: /etc/rancher/k3s
+        state: directory
+        mode: '0755'
+
+    - name: K3s - Dodanie publicznego IP do certyfikatu TLS (SAN)
+      copy:
+        dest: /etc/rancher/k3s/config.yaml
+        content: |
+          tls-san:
+            - "3.78.7.25"
+
+    - name: Instalacja K3s z oficjalnego skryptu
+      shell: curl -sfL https://get.k3s.io | sh -
+      environment:
+        INSTALL_K3S_EXEC: "server"
+
+    - name: K3s - Restart usługi, aby wczytać nowy certyfikat
+      systemd:
+        name: k3s
+        state: restarted
+        daemon_reload: yes
+
+    - name: Skopiowanie pliku kubeconfig dla użytkownika ubuntu
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /home/ubuntu/k3s.yaml
+        remote_src: yes
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-app
+  labels:
+    app: gitops-app
+spec:
+  replicas: 3 # Chcemy mieć zawsze 2 kopie aplikacji dla bezpieczeństwa
+  selector:
+    matchLabels:
+      app: gitops-app
+  template:
+    metadata:
+      labels:
+        app: gitops-app
+    spec:
+      containers:
+      - name: web-app
+        image: ghcr.io/mmichalows/gitops-app:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: APP_VERSION
+          value: "1.0.0-gitops"
