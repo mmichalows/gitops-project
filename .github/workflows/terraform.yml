@@ -37,6 +37,9 @@ jobs:
           role-to-assume: arn:aws:iam::691627365317:role/GitHubActionsGitOpsRole
           aws-region: eu-central-1
 
+      - name: Kto teraz jest w AWS?
+        run: aws sts get-caller-identity
+
       - name: Instalacja Terraforma
         uses: hashicorp/setup-terraform@v3
 
