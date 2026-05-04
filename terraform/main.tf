@@ -35,3 +35,4 @@ output "github_actions_role_arn" {
 
 # UWAGA: Moduł bazy danych (module "database") oraz jej output (database_address) 
 # zostały stąd całkowicie USUNIĘTE, zgodnie z naszą procedurą czyszczenia chmury!
+# Wymuszenie startu pipeline'u
