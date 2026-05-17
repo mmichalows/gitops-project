@@ -32,7 +32,13 @@ output "github_actions_role_arn" {
 # lub bezpośredni zasób (resource "aws_lightsail_instance" ...).
 # Zostaw tę część dokładnie tak, jak miałeś ją zanim zaczęliśmy bawić się bazą!
 
-
+module "compute" {
+  source      = "./modules/compute"
+  
+  # Lewa strona (nazwa z modułu) = Prawa strona (zmienna z głównego variables.tf)
+  server_name = var.env_server_name
+  bundle_id   = var.env_bundle_id
+}
 # UWAGA: Moduł bazy danych (module "database") oraz jej output (database_address) 
 # zostały stąd całkowicie USUNIĘTE, zgodnie z naszą procedurą czyszczenia chmury!
 # Wymuszenie startu pipeline'u
